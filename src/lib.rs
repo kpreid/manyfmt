@@ -167,13 +167,13 @@ impl<'a, F: ?Sized, T: ?Sized + Fmt<F>> fmt::Display for Wrapper<'a, F, T> {
 mod impls {
     use super::*;
     /// Forwards to the referent.
-    impl<F, T: Fmt<F>> Fmt<F> for &'_ T {
+    impl<F, T: ?Sized + Fmt<F>> Fmt<F> for &'_ T {
         fn fmt(&self, fmt: &mut fmt::Formatter<'_>, fopt: &F) -> fmt::Result {
             <T as Fmt<F>>::fmt(&**self, fmt, fopt)
         }
     }
     /// Forwards to the referent.
-    impl<F, T: Fmt<F>> Fmt<F> for &'_ mut T {
+    impl<F, T: ?Sized + Fmt<F>> Fmt<F> for &'_ mut T {
         fn fmt(&self, fmt: &mut fmt::Formatter<'_>, fopt: &F) -> fmt::Result {
             <T as Fmt<F>>::fmt(&**self, fmt, fopt)
         }

@@ -1,5 +1,15 @@
 use manyfmt::formats::Unquote;
-use manyfmt::Refmt;
+use manyfmt::{refmt, Refmt};
+
+/// If the blanket implementations for references are not correct, this will fail.
+#[test]
+fn fmt_of_references() {
+    let mut some_refs = &mut &"hello";
+    assert_eq!(
+        refmt::<Unquote, &mut &mut &&str>(&Unquote, &&mut some_refs).to_string(),
+        "hello"
+    );
+}
 
 /// `.refmt()` can be called on a type that implements `Deref` to a formattable value,
 /// and method lookup will accept this. This only works because the `F` parameter is a parameter
