@@ -1,6 +1,6 @@
 [package]
 name = "manyfmt"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 rust-version = "1.63.0"
 description = "Easily create more varieties of formatting than the std::fmt traits offer."
