@@ -108,9 +108,6 @@ pub trait Fmt<F: ?Sized> {
 /// the given [`Fmt`] custom format type instead.
 ///
 /// This operation is also available as the extension trait method [`Refmt::refmt()`].
-//---
-// Design note: `F` is a parameter of the function rather than the trait so that it can be
-// specified at the call site.
 #[inline]
 pub fn refmt<'a, F: ?Sized, T: ?Sized>(fopt: &'a F, value: &'a T) -> Wrapper<'a, F, T>
 where
@@ -120,24 +117,22 @@ where
 }
 
 /// Extension trait providing the [`.refmt()`](Self::refmt) convenience method.
-pub trait Refmt {
+//---
+// Design note: `F` is a parameter of the trait rather than the function so that method lookup will
+// propagate through dereferencing.
+pub trait Refmt<F: ?Sized>
+where
+    Self: Fmt<F>,
+{
     /// Wrap this value so that when formatted with [`fmt::Debug`] or [`fmt::Display`], it uses
     /// the given [`Fmt`] custom format type instead.
     ///
     /// This operation is also available as the non-trait function [`refmt()`].
-    //---
-    // Design note: `F` is a parameter of the function rather than the trait so that it can be
-    // specified at the call site.
-    fn refmt<'a, F: ?Sized>(&'a self, fopt: &'a F) -> Wrapper<'a, F, Self>
-    where
-        Self: Fmt<F>;
+    fn refmt<'a>(&'a self, fopt: &'a F) -> Wrapper<'a, F, Self>;
 }
-impl<T: ?Sized> Refmt for T {
+impl<F: ?Sized, T: ?Sized + Fmt<F>> Refmt<F> for T {
     #[inline]
-    fn refmt<'a, F: ?Sized>(&'a self, fopt: &'a F) -> Wrapper<'a, F, Self>
-    where
-        T: Fmt<F>,
-    {
+    fn refmt<'a>(&'a self, fopt: &'a F) -> Wrapper<'a, F, Self> {
         Wrapper { fopt, value: self }
     }
 }
