@@ -1,0 +1,15 @@
+[package]
+name = "manyfmt"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.63.0"
+description = "Easily create more varieties of formatting than the std::fmt traits offer."
+repository = "https://github.com/kpreid/manyfmt"
+license = "MIT OR Apache-2.0"
+keywords = ["fmt"]
+categories = ["no-std", "no-std::no-alloc"]
+publish = true
+exclude = [".github", ".vscode"]
+
+# No features!
+# No dependencies!

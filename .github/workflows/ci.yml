@@ -1,0 +1,90 @@
+name: Build & Test
+
+permissions: {}
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - ci
+
+env:
+  CARGO_TERM_COLOR: always
+  # Disable incremental compilation because we aren't caching incremental compilation
+  # artifacts, so they won't be useful for anything.
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: 1
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        toolchain: [stable, 1.63.0, beta, nightly]
+        features: ['']
+
+    runs-on: ubuntu-latest
+    continue-on-error: "${{ matrix.toolchain != 'nightly' && matrix.toolchain != 'beta' }}"
+
+    steps:
+    - uses: actions/checkout@v3.1.0
+
+    - name: Install Rust toolchain
+      # Install exactly what we need: compiler, Cargo, clippy
+      run: |
+          rustup toolchain install "${{ matrix.toolchain }}" --profile=minimal --component=clippy
+          rustup override set "${{ matrix.toolchain }}"
+
+    # We could cache builds, but this is a very small library, so we don't
+
+    - name: Lint
+      run: |
+        cargo clippy --timings
+        cargo rustdoc -- -Drustdoc::broken_intra_doc_links
+
+    - name: Compile
+      # compile is broken out so we have visibility into compile vs. run times
+      run: cargo test --no-default-features --features="${{ matrix.features }}" --timings --no-run
+
+    - name: Run tests
+      run: cargo test --no-default-features --features="${{ matrix.features }}" --timings
+
+  no_std:
+    runs-on: ubuntu-latest
+  
+    steps:
+    - uses: actions/checkout@v3.1.0
+
+    - name: Install Rust toolchain
+      run: |
+          rustup toolchain install stable --profile=minimal
+          rustup target add --toolchain=stable thumbv7em-none-eabihf
+          rustup override set stable
+
+    - name: Compile
+      run: cargo build --no-default-features --target thumbv7em-none-eabihf --timings
+
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3.1.0  
+    # GitHub runners already have rustfmt installed.
+    - run: cargo fmt --check --all
+
+  semver:
+    runs-on: ubuntu-latest
+  
+    steps:
+    - uses: actions/checkout@v3.1.0
+  
+    - uses: Swatinem/rust-cache@v2.0.2
+  
+    - name: Check semver
+      uses: obi1kenobi/cargo-semver-checks-action@v1
+      # Use workspace target dir for cargo install's build, so that the build will be cached.
+      env:
+        CARGO_TARGET_DIR: target/
+      with:
+        crate-name: manyfmt
+        version-tag-prefix: v
